@@ -16,18 +16,12 @@ interface FunToggleProps {
 }
 
 export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
-  const widthAnim = useRef(new Animated.Value(isOn ? 120 : 72)).current;
+  const widthAnim = useRef(new Animated.Value(120)).current;
   const colorAnim = useRef(new Animated.Value(isOn ? 1 : 0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(widthAnim, {
-        toValue: isOn ? 120 : 72,
-        useNativeDriver: false,
-        damping: 15,
-        stiffness: 200,
-      }),
       Animated.timing(colorAnim, {
         toValue: isOn ? 1 : 0,
         duration: 200,
@@ -72,11 +66,11 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
         accessibilityLabel={isOn ? 'Turn fun off' : 'Mark as having fun'}
         accessibilityRole="button"
       >
-        <Animated.View style={[styles.pill, { width: widthAnim, backgroundColor }]}>
+        <Animated.View style={[styles.pill, { backgroundColor }]}>
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.label}>{isOn ? '🟢  Fun!' : '⚫'}</Text>
+            <Text style={styles.label}>{isOn ? '🟢  Having Fun!' : '⚫  Fun'}</Text>
           )}
         </Animated.View>
       </Pressable>

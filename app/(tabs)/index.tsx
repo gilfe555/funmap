@@ -61,10 +61,16 @@ export default function MapScreen() {
     }
     setLocationPermission('granted');
     const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-    setUserLocation({
+    const coords = {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
-    });
+    };
+    setUserLocation(coords);
+    // Animate map to user location once we have it
+    mapRef.current?.animateToRegion(
+      { ...coords, latitudeDelta: 0.03, longitudeDelta: 0.03 },
+      800
+    );
   }
 
   const handleRegionChange = useCallback((region: Region) => {

@@ -1,36 +1,17 @@
 import { Tabs } from 'expo-router';
-import { Colors } from '@/constants/colors';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.funGreen,
-        tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.border,
-          elevation: 8,
-        },
+        // Tab bar hidden for MVP — only one tab exists.
+        // Remove this when Groups/Stats tabs are added in future iterations.
+        tabBarStyle: { display: 'none' },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Map',
-          tabBarIcon: ({ color }) => (
-            // Placeholder — replace with an icon library in future iterations
-            <MapTabIcon color={color} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: 'Map' }} />
       {/* Future iterations: Groups, Stats tabs will be added here */}
     </Tabs>
   );
-}
-
-function MapTabIcon({ color }: { color: string }) {
-  const { Text } = require('react-native');
-  return <Text style={{ fontSize: 20, color }}>🗺️</Text>;
 }
