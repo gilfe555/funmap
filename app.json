@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -24,7 +24,7 @@
       "package": "com.funmap.app",
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "AIzaSyBfVoScuW-OUqIyRvuerykAQJM1YWC-ZMM"
         }
       },
       "permissions": [
@@ -50,7 +50,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "37317435-9955-4a29-a84e-4b44f6df4cf1"
       }
-    }
+    },
+    "owner": "gilf"
   }
 }

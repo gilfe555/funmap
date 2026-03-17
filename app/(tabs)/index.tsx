@@ -7,7 +7,12 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import MapView, { Region, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
+import Constants from 'expo-constants';
+
+// Google Maps requires a native build — use default provider in Expo Go
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
+const MAP_PROVIDER = isExpoGo ? PROVIDER_DEFAULT : PROVIDER_GOOGLE;
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
@@ -128,8 +133,8 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFillObject}
-        provider={PROVIDER_GOOGLE}
-        customMapStyle={LIGHT_MAP_STYLE}
+        provider={MAP_PROVIDER}
+        customMapStyle={isExpoGo ? undefined : LIGHT_MAP_STYLE}
         initialRegion={initialRegion}
         showsUserLocation
         showsMyLocationButton={false}
