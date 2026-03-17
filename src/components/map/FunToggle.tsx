@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  View,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
 
@@ -15,13 +16,26 @@ interface FunToggleProps {
   onPress: () => void;
 }
 
+const PILL_WIDTH = 140;
+const PILL_HEIGHT = 56;
+const DOT_SIZE = 44;
+const DOT_MARGIN = 6;
+const DOT_OFF = DOT_MARGIN;
+const DOT_ON = PILL_WIDTH - DOT_SIZE - DOT_MARGIN;
+
 export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
-  const widthAnim = useRef(new Animated.Value(120)).current;
+  const dotAnim = useRef(new Animated.Value(isOn ? DOT_ON : DOT_OFF)).current;
   const colorAnim = useRef(new Animated.Value(isOn ? 1 : 0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
+      Animated.spring(dotAnim, {
+        toValue: isOn ? DOT_ON : DOT_OFF,
+        useNativeDriver: false,
+        damping: 18,
+        stiffness: 220,
+      }),
       Animated.timing(colorAnim, {
         toValue: isOn ? 1 : 0,
         duration: 200,
@@ -32,7 +46,7 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
 
   function handlePressIn() {
     Animated.spring(scaleAnim, {
-      toValue: 0.93,
+      toValue: 0.94,
       useNativeDriver: true,
       damping: 15,
     }).start();
@@ -52,12 +66,7 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.shadow,
-        { transform: [{ scale: scaleAnim }] },
-      ]}
-    >
+    <Animated.View style={[styles.shadow, { transform: [{ scale: scaleAnim }] }]}>
       <Pressable
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -70,7 +79,14 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.label}>Fun</Text>
+            <>
+              {/* Sliding white dot */}
+              <Animated.View style={[styles.dot, { left: dotAnim }]} />
+              {/* Centered label */}
+              <View style={styles.labelContainer} pointerEvents="none">
+                <Text style={styles.label}>Fun</Text>
+              </View>
+            </>
           )}
         </Animated.View>
       </Pressable>
@@ -81,9 +97,7 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
 const styles = StyleSheet.create({
   shadow: {
     ...Platform.select({
-      android: {
-        elevation: 8,
-      },
+      android: { elevation: 8 },
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -93,11 +107,33 @@ const styles = StyleSheet.create({
     }),
   },
   pill: {
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
+    width: PILL_WIDTH,
+    height: PILL_HEIGHT,
+    borderRadius: PILL_HEIGHT / 2,
     justifyContent: 'center',
-    paddingHorizontal: 16,
+  },
+  dot: {
+    position: 'absolute',
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
+    backgroundColor: '#FFFFFF',
+    top: (PILL_HEIGHT - DOT_SIZE) / 2,
+    ...Platform.select({
+      android: { elevation: 3 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+      },
+    }),
+  },
+  labelContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   label: {
     color: '#FFFFFF',
