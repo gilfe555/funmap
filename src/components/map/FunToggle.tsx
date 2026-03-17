@@ -70,7 +70,7 @@ export function FunToggle({ isOn, isLoading, onPress }: FunToggleProps) {
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.label}>{isOn ? '🟢  Having Fun!' : '⚫  Fun'}</Text>
+            <Text style={styles.label}>Fun</Text>
           )}
         </Animated.View>
       </Pressable>
