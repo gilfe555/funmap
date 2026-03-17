@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -r funmap-temp/assets .)",
+      "Bash(cp funmap-temp/index.ts .)",
+      "Bash(cp funmap-temp/tsconfig.json .)",
+      "Bash(rm -rf funmap-temp)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(eas build:*)",
+      "Bash(npx expo:*)",
+      "Bash(\"C:/Documents/personal/Gil Claude/Fan Map/.npmrc\")"
+    ]
+  }
+}
