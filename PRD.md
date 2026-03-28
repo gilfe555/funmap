@@ -30,21 +30,34 @@ Groups of friends or tourists open the app to see a **live heatmap** of where pe
 ### Core Features
 | Feature | Description |
 |--------|-------------|
-| **Binary Fun Toggle** | Users indicate "Having Fun" (Green) or "Not Fun" (Gray/Off) via a pill-shaped toggle. |
-| **Real-time Heatmap** | Inputs are visualized on an interactive map as "heat blobs" with varying intensity. |
+| **Binary Fun Toggle** | Pill-shaped toggle, sliding white dot. Gray (off) → Neon green (#39FF14) on. "Fun" label always visible, centered. |
+| **Real-time Heatmap** | Inputs are visualized on an interactive map as "heat blobs" with varying intensity (L1/L2/L3). |
 | **Account Required** | Email/Password login. No guest mode. |
 | **Global from Day One** | No geographic restriction at launch. |
+| **Place Search** | Google Places autocomplete search bar at top of map. Same feel as Google Maps search. |
+| **Center on Location** | White circle FAB (bottom right, above toggle). Tapping animates the map back to the user's current GPS position. |
+| **Tab Navigation** | Map tab (🗺️) and Settings tab (⚙️). Tab bar visible. Groups tab reserved for next iteration. |
+| **Settings Screen** | Sign out button. Placeholder sections for Notifications and Preferences (grayed out, "Coming soon"). |
 
 ### Key Behaviors
 - **One active fun spot per user** — Toggling on at a new location implicitly turns off the previous one.
-- **Fun stays on until** the user turns it off **or** leaves the area (geo-exit auto-off).
-- **Leave-area logic:** Geofence per venue when POI data is available; otherwise fixed-radius fallback.
-- **Empty map:** Show "Be the first to mark fun here" when no activity exists in view.
+- **Auto-off after 8 hours** — Server-side `expires_at` enforces this; client timer syncs UI.
+- **Empty map:** Show "Be the first, lead the fun" as gentle gray centered text when 0 clusters visible in the current view.
+
+### MVP Design Spec
+| Element | Spec |
+|---------|------|
+| **Fun Toggle** | Pill 140×56px, sliding white dot 44px, DOT_OFF=6px from left, DOT_ON=90px from left. Animated spring (dot) + timing (color). |
+| **Search Bar** | Fixed top of map, Google Places autocomplete, rounded card with shadow. Moves map to selected place. |
+| **Location Button** | White circle FAB 48px, bottom right corner, above the fun toggle. Centers map on user GPS. |
+| **Tab Bar** | Map (🗺️) + Settings (⚙️). Standard React Native tab bar. |
+| **Empty State** | "Be the first, lead the fun" — gray, small, centered text. Only shown when 0 clusters in viewport. |
 
 ### Technical Requirements (MVP)
-- Binary input UI styled as a traffic-light metaphor (Green = Fun, Gray = Off).
-- Real-time data aggregation backend.
-- Fun Map with dynamic geolocation markers.
+- Binary input UI (pill toggle with sliding dot, neon green on, gray off).
+- Real-time data aggregation backend (Supabase Realtime + postgres_changes).
+- Google Maps via `react-native-maps` (PROVIDER_GOOGLE, requires native EAS build).
+- Google Places API for search autocomplete.
 - Privacy controls (opt-in visibility; MVP is hotspot-only, no friends graph).
 
 ### MVP KPIs

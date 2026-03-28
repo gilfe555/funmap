@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Pressable,
   Alert,
 } from 'react-native';
 import MapView, { Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
@@ -18,9 +17,10 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { useHeatmap } from '@/hooks/useHeatmap';
 import { useFunSignal } from '@/hooks/useFunSignal';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { Heatmap } from '@/components/map/Heatmap';
 import { FunToggle } from '@/components/map/FunToggle';
+import { SearchBar } from '@/components/map/SearchBar';
+import { LocationButton } from '@/components/map/LocationButton';
 import { MapBounds } from '@/types';
 import { Colors } from '@/constants/colors';
 import { DEFAULT_REGION } from '@/constants/config';
@@ -47,7 +47,6 @@ export default function MapScreen() {
   const [locationPermission, setLocationPermission] = useState<'loading' | 'granted' | 'denied'>('loading');
   const { clusters } = useHeatmap(bounds);
   const { isOn, isLoading, toggleFun } = useFunSignal();
-  const { signOut } = useAuthContext();
 
   useEffect(() => {
     requestLocationPermission();
@@ -66,7 +65,6 @@ export default function MapScreen() {
       longitude: location.coords.longitude,
     };
     setUserLocation(coords);
-    // Animate map to user location once we have it
     mapRef.current?.animateToRegion(
       { ...coords, latitudeDelta: 0.03, longitudeDelta: 0.03 },
       800
@@ -84,13 +82,27 @@ export default function MapScreen() {
     });
   }, []);
 
+  function handleCenterOnUser() {
+    if (!userLocation) return;
+    mapRef.current?.animateToRegion(
+      { ...userLocation, latitudeDelta: 0.03, longitudeDelta: 0.03 },
+      600
+    );
+  }
+
+  function handlePlaceSelected(lat: number, lng: number) {
+    mapRef.current?.animateToRegion(
+      { latitude: lat, longitude: lng, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+      600
+    );
+  }
+
   async function handleToggle() {
     if (!userLocation) {
       Alert.alert('Location needed', 'Enable location to mark fun at your spot.');
       return;
     }
 
-    // Refresh location before toggling on
     if (!isOn) {
       try {
         const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -150,24 +162,27 @@ export default function MapScreen() {
         <Heatmap clusters={clusters} />
       </MapView>
 
+      {/* Search bar (top, inside safe area) */}
+      <SafeAreaView style={styles.searchContainer} edges={['top']}>
+        <SearchBar onPlaceSelected={handlePlaceSelected} />
+      </SafeAreaView>
+
       {/* Empty state */}
       {isEmpty && (
         <View style={styles.emptyBanner} pointerEvents="none">
-          <Text style={styles.emptyText}>🗺️ Be the first to mark fun here!</Text>
+          <Text style={styles.emptyText}>Be the first, lead the fun</Text>
         </View>
       )}
-
-      {/* Sign out button (top right) */}
-      <SafeAreaView style={styles.topRight} edges={['top']}>
-        <Pressable style={styles.signOutButton} onPress={signOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
-      </SafeAreaView>
 
       {/* Fun toggle (bottom center) */}
       <SafeAreaView style={styles.toggleContainer} edges={['bottom']}>
         <FunToggle isOn={isOn} isLoading={isLoading} onPress={handleToggle} />
       </SafeAreaView>
+
+      {/* Location button (bottom right, above toggle) */}
+      <View style={styles.locationButtonContainer}>
+        <LocationButton onPress={handleCenterOnUser} />
+      </View>
     </View>
   );
 }
@@ -202,41 +217,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  searchContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 8,
+  },
   emptyBanner: {
     position: 'absolute',
-    top: 100,
+    top: 130,
     alignSelf: 'center',
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  topRight: {
-    position: 'absolute',
-    top: 0,
-    right: 16,
-  },
-  signOutButton: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    elevation: 2,
-  },
-  signOutText: {
-    fontSize: 13,
     color: Colors.textSecondary,
     fontWeight: '500',
   },
@@ -247,5 +241,10 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingBottom: 16,
+  },
+  locationButtonContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 96,
   },
 });
