@@ -222,11 +222,12 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 8,
+    paddingTop: 4,
+    zIndex: 10,
   },
   emptyBanner: {
     position: 'absolute',
-    top: 130,
+    top: 140,
     alignSelf: 'center',
   },
   emptyText: {
@@ -240,11 +241,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: 16,
+    paddingBottom: 4,
   },
   locationButtonContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 96,
+    bottom: 80,
   },
 });

@@ -54,11 +54,7 @@ export function SearchBar({ onPlaceSelected }: SearchBarProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 16,
-    right: 16,
-    zIndex: 10,
+    marginHorizontal: 16,
   },
   container: {
     flex: 0,
