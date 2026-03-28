@@ -76,152 +76,53 @@ Groups of friends or tourists open the app to see a **live heatmap** of where pe
 
 ## 3. Product Roadmap (Post-MVP)
 
-### Quick Reference: All Screens by Iteration
+### Next Phase: Groups
 
-| Iteration | Screens |
-|-----------|---------|
-| **1** | Map (Current/Future), Groups Discovery, Group Detail, Create Group, Schedule Event, Future Map |
-| **2** | Map (Public/My Groups filter), Create Private Group, My Groups |
-| **3** | Map (unchanged), Settings (permissions), In-app toasts |
-| **4** | Statistics (main), Venue Detail (time chart) |
-| **5** | Submit Request, Requests List |
+The next development phase adds social groups and a forward-looking "Future" map mode. Users can join interest-based groups (public or private), schedule events, RSVP, and see upcoming fun on the map before it happens.
+
+An interactive design prototype for this phase is available here:
+👉 **[View Groups Phase Prototype](https://htmlpreview.github.io/?https://github.com/gilfe555/funmap/blob/develop/prototype.html)**
 
 ---
 
-### Iteration 1: Groups & Future Fun
+### Screens Overview
 
-**Overview:** Users join interest-based groups (e.g., Beach Frisbee, Live Music), schedule events, and view both current fun and future fun on the map.
-
-**Pages/Screens:**
-
-| Screen | Purpose |
-|--------|---------|
-| **Map (Current/Future)** | Main map with toggle: "Current" (live heatmap) vs "Future" (event pins). Bottom panel shows upcoming events. |
-| **Groups Discovery** | Browse/search groups by interest. Cards show group name, icon, member count. Join or create. |
-| **Group Detail** | View group info, members, upcoming events. Schedule new event. |
-| **Create Group** | Name, icon, description. Invite users (optional). |
-| **Schedule Event** | Pick date, time, location. Add to group. |
-| **Future Map** | Map with event pins (clock icon, time label). Tap pin for event details. |
-
-**User Flow:**
-
-1. User opens Map → sees Current toggle (default). Taps "Future" → map shows event pins.
-2. User taps "Groups" in nav → Discover Groups → joins "Beach Frisbee" (or creates new).
-3. User opens Group → "Schedule Event" → "Bograshov Beach, 8 AM tomorrow" → event appears on Future Map.
-4. User taps event pin → sees details, RSVP.
-
-**Design Mockups:**
-
-| Mockup | File | Description |
-|--------|------|--------------|
-| Map with Current/Future toggle | `designs/funmap_iter1_map_toggle.png` | Map + toggle + upcoming events panel |
-| Groups Discovery | `designs/funmap_iter1_groups_discovery.png` | Groups grid, search, create button |
-| Future Map View | `designs/funmap_iter1_future_map.png` | Event pins with time labels |
+| Screen | Description |
+|--------|-------------|
+| **Map – Now Mode** | Existing live heatmap. Gains a Now / Future pill toggle at the top. Tab bar adds Groups + Alerts tabs. |
+| **Map – Future Mode** | Switches map to show upcoming event blobs (same heat levels, same intensity colors). Each blob shows time and RSVP count. Group filter chips let user focus on specific groups. Scrollable events strip at the bottom. Fun toggle is hidden in Future mode. |
+| **Discover Groups** | List of "My Groups" + public groups to join. Search bar at top. Group cards show name, type (Public / Private badge), description, member count, and star rating. FAB (+) to create a new group. |
+| **Create Group** | Type toggle: Public or Private. Fields: name, description. Private groups reveal an invite search. Submit creates the group and opens its detail screen. |
+| **Group Detail – Events tab** | Group header: name, rating, member count, Public/Private badge. Action buttons: Invite, Leave. Events tab lists upcoming events with time-box, title, group tag, description, location, initiator, RSVP count. RSVP button per event. Fun Meter widget (rate the group 1–5 stars). FAB (+) to create a new event. |
+| **Group Detail – Members tab** | Same header as Events tab. Member list with avatar, name, join date, and role (admin / member). |
+| **Create Event** | Fields: event name, date/time, location (search), description, group (dropdown). Submit saves event and returns to Group Detail. |
+| **Event Detail** | Full event view: title, group, date/time, location, description, initiator, attendee count. RSVP button. Map thumbnail showing event location. |
+| **Invite Users** | Search users by name or email. User rows with avatar and Invite button (toggles to ✓ Invited). |
+| **Notifications / Alerts** | Feed of alerts: new events in joined groups, RSVPs, invites received. Unread badge on Alerts tab. |
 
 ---
 
-### Iteration 2: Private Groups
+### Tab Bar (Groups Phase)
 
-**Overview:** Users create private groups by selecting specific people (not interests). These groups share current fun only—no event scheduling. Map can filter to show public vs. private-group fun.
+| Tab | Icon | Notes |
+|-----|------|-------|
+| Map | 🗺️ | Default tab. Now/Future toggle lives here. |
+| Groups | 👥 | Opens Discover Groups. |
+| Alerts | 🔔 | Notification feed. Shows unread badge count. |
 
-**Pages/Screens:**
-
-| Screen | Purpose |
-|--------|---------|
-| **Map (with filter)** | Toggle: "Public" (city-wide heatmap) vs "My Groups" (only fun from user's private groups). |
-| **Create Private Group** | Name, select members from contacts/friends. No interests or events. |
-| **My Groups** | List of groups user belongs to. Tap to view members, leave group. |
-
-**User Flow:**
-
-1. User opens Map → sees "Public" (default). Taps "My Groups" → map shows only fun from Close Friends, Weekend Crew, etc.
-2. User taps "Create Group" → "Close Friends" → selects Alex, Mia, Sam → Create.
-3. Group members see each other's fun on the map when "My Groups" filter is on.
-
-**Design Mockups:**
-
-| Mockup | File | Description |
-|--------|------|--------------|
-| Map with Public/My Groups filter | `designs/funmap_iter2_map_filter.png` | Filter pill + map legend |
-| Create Private Group | `designs/funmap_iter2_private_group.png` | Create form + member selection |
+Settings moves to a gear icon accessible from within the Map or Groups screens (not a dedicated tab).
 
 ---
 
-### Iteration 3: Automatic Fun Status
+### Key Behaviors
 
-**Overview:** Fun status updates automatically when the user leaves a fun area or arrives at a scheduled event. Requires background location permission.
-
-**Pages/Screens:**
-
-| Screen | Purpose |
-|--------|---------|
-| **Map (unchanged)** | Same as before. Notifications appear as toasts/banners. |
-| **Settings** | Permission toggle for "Background location" (auto fun status). |
-| **Notifications (in-app)** | Toast: "You left the area. Fun turned off." / "You arrived at Beach Frisbee! Fun turned on." |
-
-**User Flow:**
-
-1. User has Fun ON at Downtown Bar. User walks away → app detects exit → toast "You left the area. Fun turned off."
-2. User has RSVP'd to "Beach Frisbee 8 AM". User arrives at location + time → toast "You arrived at Beach Frisbee! Fun turned on."
-3. User can always manually override (toggle off/on).
-
-**Design Mockups:**
-
-| Mockup | File | Description |
-|--------|------|--------------|
-| Auto-off notification | `designs/funmap_iter3_auto_off.png` | Toast: left area, fun turned off |
-| Auto-on notification | `designs/funmap_iter3_auto_on.png` | Toast: arrived at event, fun turned on |
-
----
-
-### Iteration 4: Statistics Tab
-
-**Overview:** Users see a Statistics tab with hottest spots over time, peak hours, and leaderboards (most fun users/groups).
-
-**Pages/Screens:**
-
-| Screen | Purpose |
-|--------|---------|
-| **Statistics (main)** | Tab: Map | Stats. Stats shows: Hottest Spots This Week (list), Top Contributors (leaderboard). |
-| **Venue Detail (time chart)** | Tap a venue → see "Fun activity by hour" chart (peak hours). |
-
-**User Flow:**
-
-1. User taps "Stats" in nav → sees "Hottest Spots This Week" (Downtown Bar 847 hrs, City Park 612 hrs, etc.) and "Top Contributors" (@alex_fun 42 spots, etc.).
-2. User taps "Downtown Bar" → sees chart: peak at 9 PM.
-
-**Design Mockups:**
-
-| Mockup | File | Description |
-|--------|------|--------------|
-| Statistics tab | `designs/funmap_iter4_statistics.png` | Hottest spots + leaderboards |
-| Hottest spots over time | `designs/funmap_iter4_hotspots_time.png` | Chart: fun by hour for a venue |
-
----
-
-### Iteration 5: Feature Request System
-
-**Overview:** Users submit feature requests in-app. All requests are saved, clustered, and prioritized for admins. Users can view and vote on clustered requests.
-
-**Pages/Screens:**
-
-| Screen | Purpose |
-|--------|---------|
-| **Submit Request** | Form: describe idea, category (New Feature / Bug / Improvement). Submit. |
-| **Requests List** | View clustered requests (e.g., "Dark mode" 23 votes, "Export my data" 18 votes). Vote on requests. Status: Under review / Planned. |
-
-**User Flow:**
-
-1. User taps "Suggest a Feature" (in Profile or Settings) → writes "I want dark mode" → Submit.
-2. User taps "Feature Requests" → sees list of clustered ideas with vote counts → taps "Dark mode" → upvotes.
-3. Admins: review clustered backlog, prioritize, map to roadmap.
-
-**Design Mockups:**
-
-| Mockup | File | Description |
-|--------|------|--------------|
-| Submit feature request | `designs/funmap_iter5_submit_request.png` | Form to submit idea |
-| Requests list (voting) | `designs/funmap_iter5_requests_list.png` | Clustered requests + vote counts |
+- **Now vs Future:** Toggling to Future hides the Fun toggle (you can't mark yourself as having fun in the future). The map shows upcoming event blobs instead of live ones.
+- **Future blob intensity:** Matches live heatmap levels — based on RSVP count (L1: 1–2, L2: 3–5, L3: 6+). Each blob shows a time label and attendee count.
+- **Group filter chips (Future mode):** Filter future blobs by group. "All Groups" selected by default.
+- **Public vs Private groups:** Public groups are discoverable and joinable by anyone. Private groups are invite-only and not listed publicly.
+- **Fun Meter:** Each group has a star rating (1–5). Users rate from the Group Detail screen. Average rating shown on group cards.
+- **RSVP:** Tapping "Going?" on an event marks the user as attending. RSVP count updates immediately and affects blob intensity on the Future map.
+- **Invites:** Group admins can invite users from the Group Detail or Create Group screens. Invitees receive an alert.
 
 ---
 
