@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FunMap – Groups Phase Prototype</title>
+<style>
+:root {
+  --green: #39FF14;
+  --green-dim: #2acc10;
+  --green-pale: rgba(144,238,144,0.45);
+  --green-mid: rgba(57,255,20,0.65);
+  --green-hot: rgba(0,128,0,0.88);
+  --bg: #0e0e1a;
+  --surface: #1a1a2e;
+  --border: #2a2a3e;
+  --text: #f0f0f0;
+  --muted: #888;
+  --card: #20203a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  display: flex;
+  min-height: 100vh;
+  color: var(--text);
+}
+
+/* ─── SIDEBAR ─────────────────────────────── */
+.sidebar {
+  width: 230px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-header {
+  padding: 20px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h1 { font-size: 17px; color: var(--green); letter-spacing: -0.3px; }
+.sidebar-header p { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.nav-section { padding: 10px 0 2px; }
+.nav-section-label {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--muted); padding: 6px 18px 4px;
+}
+.nav-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 18px; cursor: pointer;
+  font-size: 13px; color: #bbb;
+  border-left: 3px solid transparent;
+  transition: all 0.15s; user-select: none;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.04); color: #eee; }
+.nav-btn.active { color: var(--green); border-left-color: var(--green); background: rgba(57,255,20,0.06); }
+.nav-btn .icon { font-size: 15px; width: 20px; text-align: center; }
+
+/* ─── PHONE WRAPPER ───────────────────────── */
+.stage {
+  margin-left: 230px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 40px;
+  min-height: 100vh;
+}
+.phone {
+  width: 393px;
+  height: 852px;
+  border-radius: 52px;
+  border: 11px solid #2a2a2a;
+  background: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), inset 0 0 0 1px #444;
+  flex-shrink: 0;
+}
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 34px;
+  background: #1a1a1a; border-radius: 0 0 22px 22px; z-index: 999;
+}
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 48px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 22px 8px; z-index: 100; pointer-events: none;
+  font-size: 13px; font-weight: 600;
+}
+.status-bar.dark { color: #111; }
+.status-bar.light { color: white; }
+
+/* ─── SCREENS ─────────────────────────────── */
+.screen {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: none; flex-direction: column; overflow: hidden; background: white;
+}
+.screen.active { display: flex; }
+
+/* ─── TAB BAR ─────────────────────────────── */
+.tab-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 82px; background: white;
+  border-top: 1px solid #e8e8e8;
+  display: flex; align-items: flex-start; padding-top: 10px; z-index: 50;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; padding: 2px 0; position: relative;
+}
+.tab-item .t-icon { font-size: 23px; }
+.tab-item .t-label { font-size: 10px; color: #999; margin-top: 3px; font-weight: 500; }
+.tab-item.active .t-label { color: #39FF14; }
+.tab-badge {
+  position: absolute; top: -2px; right: 18px;
+  background: #ff3b30; color: white;
+  font-size: 9px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+
+/* ─── MAP BACKGROUND ──────────────────────── */
+.map-bg {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: #ede9de; overflow: hidden;
+}
+.map-street-h, .map-street-v { position: absolute; background: #fff; }
+.map-street-h { left: 0; right: 0; height: 9px; }
+.map-street-v { top: 0; bottom: 0; width: 9px; }
+.map-block { position: absolute; background: #ddd9cc; border-radius: 2px; }
+.map-park { position: absolute; background: #c8e6c9; border-radius: 4px; }
+.map-water { position: absolute; background: #aed6f1; border-radius: 50%; }
+
+/* Heat blobs */
+.blob {
+  position: absolute; border-radius: 50%;
+  transform: translate(-50%, -50%); pointer-events: none;
+}
+.blob-l1 { background: var(--green-pale); border: 1.5px solid rgba(100,200,80,0.3); }
+.blob-l2 { background: var(--green-mid); border: 1.5px solid rgba(57,200,20,0.5); }
+.blob-l3 { background: var(--green-hot); border: 2px solid rgba(0,90,0,0.6); }
+.blob-label {
+  position: absolute; transform: translate(-50%,-50%);
+  background: white; border-radius: 10px; padding: 2px 7px;
+  font-size: 11px; font-weight: 700; color: #222;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25); white-space: nowrap; z-index: 5;
+}
+.fire-emoji { position: absolute; transform: translate(-50%,-50%); font-size: 22px; z-index: 5; }
+
+/* ─── MAP MODE TOGGLE ─────────────────────── */
+.map-mode-pill {
+  position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+  background: white; border-radius: 22px; display: flex;
+  padding: 3px; z-index: 20;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.map-mode-opt {
+  padding: 7px 22px; border-radius: 19px; font-size: 14px; font-weight: 600;
+  cursor: pointer; color: #666; transition: all 0.2s; user-select: none;
+}
+.map-mode-opt.active { background: #39FF14; color: #111; }
+
+/* Group filter chips */
+.group-chips {
+  position: absolute; top: 106px; left: 0; right: 0; z-index: 20;
+  display: flex; gap: 7px; padding: 0 14px; overflow-x: auto;
+}
+.group-chips::-webkit-scrollbar { display: none; }
+.chip {
+  background: white; border-radius: 18px; padding: 5px 13px;
+  font-size: 12px; font-weight: 600; color: #444; cursor: pointer;
+  white-space: nowrap; box-shadow: 0 1px 6px rgba(0,0,0,0.14);
+  border: 2px solid transparent; transition: all 0.15s; flex-shrink: 0;
+}
+.chip.active { border-color: #39FF14; color: #111; background: rgba(57,255,20,0.1); }
+
+/* Fun toggle */
+.fun-toggle-wrap {
+  position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 20;
+}
+.fun-toggle {
+  width: 148px; height: 56px; border-radius: 28px;
+  background: #ccc; display: flex; align-items: center;
+  position: relative; cursor: pointer; transition: background 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+}
+.fun-toggle.on { background: #39FF14; }
+.fun-dot {
+  width: 46px; height: 46px; background: white; border-radius: 23px;
+  position: absolute; left: 5px; transition: left 0.25s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.fun-toggle.on .fun-dot { left: 97px; }
+.fun-toggle-label {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-size: 15px; font-weight: 700; color: #333; pointer-events: none;
+}
+
+/* Events bottom strip */
+.events-strip {
+  position: absolute; bottom: 82px; left: 0; right: 0;
+  z-index: 20; padding: 10px 12px;
+}
+.events-strip-scroll { display: flex; gap: 10px; overflow-x: auto; }
+.events-strip-scroll::-webkit-scrollbar { display: none; }
+.event-card-mini {
+  background: white; border-radius: 14px; padding: 10px 13px;
+  min-width: 160px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  cursor: pointer; flex-shrink: 0;
+  border-left: 4px solid #39FF14;
+}
+.ecm-group { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; }
+.ecm-title { font-size: 13px; font-weight: 700; color: #111; margin: 2px 0; }
+.ecm-time { font-size: 11px; color: #555; }
+.ecm-att { font-size: 11px; color: #39FF14; font-weight: 700; }
+
+/* Sign out btn */
+.sign-out-btn {
+  position: absolute; top: 52px; right: 14px; z-index: 20;
+  background: white; border-radius: 20px; padding: 6px 13px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15); color: #333;
+}
+
+/* ─── SCREEN HEADER ───────────────────────── */
+.screen-header {
+  height: 48px; display: flex; align-items: center;
+  padding: 0 16px; border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+.screen-header.padtop { padding-top: 48px; height: 96px; }
+.header-title { font-size: 17px; font-weight: 700; color: #111; flex: 1; text-align: center; }
+.header-back {
+  font-size: 16px; color: #007aff; cursor: pointer;
+  display: flex; align-items: center; gap: 3px; font-weight: 500;
+}
+.header-action { font-size: 15px; color: #007aff; cursor: pointer; font-weight: 600; }
+
+/* ─── COMMON COMPONENTS ───────────────────── */
+.search-bar {
+  margin: 10px 14px; background: #f2f2f7; border-radius: 12px;
+  padding: 9px 14px; display: flex; align-items: center; gap: 8px;
+}
+.search-bar input {
+  border: none; background: transparent; font-size: 15px; outline: none; flex: 1; color: #111;
+}
+.search-bar input::placeholder { color: #999; }
+
+.scroll-content { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+.scroll-content::-webkit-scrollbar { width: 4px; }
+.scroll-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+.section-label { font-size: 12px; color: #888; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px 6px; }
+
+/* Group card */
+.group-card {
+  margin: 6px 14px; background: white; border-radius: 16px;
+  padding: 14px 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  border: 1px solid #f0f0f0; cursor: pointer; transition: transform 0.1s;
+}
+.group-card:active { transform: scale(0.98); }
+.gc-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.gc-name { font-size: 16px; font-weight: 700; color: #111; }
+.gc-topic { font-size: 13px; color: #555; margin-top: 2px; }
+.gc-desc { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.4; }
+.gc-meta { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.gc-meta-item { font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
+.gc-badge {
+  font-size: 11px; background: #f0f0f5; color: #555;
+  padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+.gc-badge.public { background: rgba(57,255,20,0.12); color: #1a8800; }
+.gc-badge.private { background: rgba(255,150,0,0.12); color: #b06000; }
+.join-btn {
+  background: #39FF14; color: #111; border: none; border-radius: 16px;
+  padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.join-btn.joined { background: #f0f0f5; color: #666; }
+
+/* Stars */
+.stars { display: inline-flex; gap: 2px; }
+.star { font-size: 13px; color: #ddd; cursor: pointer; }
+.star.filled { color: #ffb800; }
+
+/* FAB */
+.fab {
+  position: absolute; bottom: 98px; right: 18px;
+  width: 52px; height: 52px; border-radius: 26px;
+  background: #39FF14; display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 300; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(57,255,20,0.5); z-index: 30; color: #111; line-height: 1;
+}
+
+/* Event list item */
+.event-item {
+  margin: 6px 14px; background: white; border-radius: 14px;
+  padding: 12px 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  border: 1px solid #f0f0f0; display: flex; gap: 12px; align-items: flex-start;
+  cursor: pointer;
+}
+.ei-time-box {
+  background: #f8f8ff; border-radius: 10px; padding: 6px 8px;
+  text-align: center; min-width: 46px;
+}
+.ei-time-day { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; }
+.ei-time-hour { font-size: 17px; font-weight: 800; color: #111; line-height: 1; }
+.ei-time-ampm { font-size: 10px; color: #555; font-weight: 600; }
+.ei-body { flex: 1; }
+.ei-title { font-size: 15px; font-weight: 700; color: #111; }
+.ei-group { font-size: 11px; color: #39FF14; font-weight: 700; margin-top: 1px; }
+.ei-desc { font-size: 12px; color: #777; margin-top: 3px; }
+.ei-meta { display: flex; gap: 10px; margin-top: 6px; align-items: center; }
+.ei-meta-item { font-size: 11px; color: #888; display: flex; align-items: center; gap: 3px; }
+.rsvp-btn {
+  background: #39FF14; border: none; border-radius: 12px;
+  padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer; color: #111;
+  white-space: nowrap;
+}
+.rsvp-btn.attending { background: #f0f0f5; color: #666; }
+
+/* Member row */
+.member-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer;
+}
+.avatar {
+  width: 40px; height: 40px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.member-name { font-size: 15px; font-weight: 600; color: #111; }
+.member-role { font-size: 12px; color: #888; margin-top: 1px; }
+.role-badge {
+  margin-left: auto; font-size: 11px; background: rgba(57,255,20,0.12);
+  color: #1a8800; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+
+/* Forms */
+.form-section { padding: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: #f2f2f7; border: none; border-radius: 12px;
+  padding: 12px 14px; font-size: 15px; color: #111; outline: none;
+  font-family: inherit;
+}
+.form-input:focus { background: #eaeaf0; }
+.form-textarea { resize: none; height: 72px; line-height: 1.4; }
+.type-toggle {
+  display: flex; background: #f2f2f7; border-radius: 12px; padding: 3px;
+}
+.type-opt {
+  flex: 1; text-align: center; padding: 8px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer; color: #666; transition: all 0.2s;
+}
+.type-opt.active { background: white; color: #111; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+.submit-btn {
+  display: block; width: 100%; background: #39FF14; border: none; border-radius: 14px;
+  padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; color: #111;
+  margin-top: 8px;
+}
+
+/* Notification rows */
+.notif-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer;
+  transition: background 0.1s;
+}
+.notif-row:hover { background: #f9f9fb; }
+.notif-row.unread { background: rgba(57,255,20,0.04); }
+.notif-icon {
+  width: 42px; height: 42px; border-radius: 21px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.notif-body { flex: 1; }
+.notif-title { font-size: 14px; font-weight: 600; color: #111; }
+.notif-text { font-size: 13px; color: #666; margin-top: 2px; line-height: 1.3; }
+.notif-time { font-size: 11px; color: #aaa; margin-top: 4px; }
+.notif-dot { width: 8px; height: 8px; background: #39FF14; border-radius: 4px; margin-top: 6px; flex-shrink: 0; }
+.notif-actions { display: flex; gap: 8px; margin-top: 8px; }
+.notif-accept { background: #39FF14; border: none; border-radius: 10px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; color: #111; }
+.notif-decline { background: #f0f0f5; border: none; border-radius: 10px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #666; }
+
+/* Location picker mock */
+.location-picker {
+  width: 100%; height: 120px; border-radius: 14px; background: #ede9de;
+  position: relative; overflow: hidden; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px dashed #ccc;
+}
+.location-picker .pin { font-size: 32px; }
+.location-picker-label { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 12px; color: #666; }
+
+/* Event detail */
+.event-detail-map {
+  height: 160px; background: #ede9de; position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.event-detail-info { padding: 16px; }
+.edi-title { font-size: 20px; font-weight: 800; color: #111; }
+.edi-group { font-size: 13px; color: #39FF14; font-weight: 700; margin-top: 3px; }
+.edi-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+.edi-row-icon { font-size: 20px; width: 28px; text-align: center; }
+.edi-row-text { font-size: 14px; color: #333; }
+.edi-row-sub { font-size: 12px; color: #888; }
+.rsvp-big-btn {
+  display: block; width: 100%; background: #39FF14; border: none; border-radius: 14px;
+  padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; color: #111; margin-top: 14px;
+}
+.rsvp-big-btn.attending { background: #f0f0f5; color: #666; }
+
+/* Group detail header */
+.group-detail-header {
+  padding: 58px 16px 14px; background: white; border-bottom: 1px solid #f0f0f0;
+}
+.gdh-name { font-size: 20px; font-weight: 800; color: #111; }
+.gdh-topic { font-size: 14px; color: #555; margin-top: 2px; }
+.gdh-meta { display: flex; gap: 14px; align-items: center; margin-top: 10px; }
+.gdh-rating { display: flex; align-items: center; gap: 5px; }
+.gdh-rating-val { font-size: 16px; font-weight: 800; color: #111; }
+.gdh-stat { font-size: 13px; color: #666; display: flex; align-items: center; gap: 4px; }
+.gdh-actions { display: flex; gap: 8px; margin-top: 12px; }
+.gdh-btn {
+  flex: 1; border: none; border-radius: 12px; padding: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.gdh-btn.primary { background: #39FF14; color: #111; }
+.gdh-btn.secondary { background: #f0f0f5; color: #666; }
+
+/* Inline tabs */
+.inline-tabs { display: flex; border-bottom: 1px solid #f0f0f0; background: white; }
+.inline-tab {
+  flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 600;
+  color: #888; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.inline-tab.active { color: #111; border-bottom-color: #39FF14; }
+
+/* Fun meter section */
+.fun-meter {
+  margin: 14px 16px; background: #f9f9fb; border-radius: 14px; padding: 14px;
+}
+.fun-meter-title { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.fun-meter-stars { display: flex; gap: 6px; }
+.fm-star { font-size: 26px; cursor: pointer; filter: grayscale(1); transition: filter 0.15s, transform 0.1s; }
+.fm-star.filled { filter: none; }
+.fm-star:hover { transform: scale(1.2); }
+.fun-meter-avg { font-size: 12px; color: #888; margin-top: 6px; }
+
+/* User search row */
+.user-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; border-bottom: 1px solid #f5f5f5;
+}
+.invite-btn {
+  margin-left: auto; background: #f0f0f5; border: none; border-radius: 12px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #333;
+}
+.invite-btn.sent { background: rgba(57,255,20,0.12); color: #1a8800; }
+
+/* Bottom home indicator */
+.home-indicator {
+  position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 5px; background: #333; border-radius: 3px; z-index: 999;
+}
+</style>
+</head>
+<body>
+
+<!-- ─── SIDEBAR ─────────────────────────── -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>🗺 FunMap</h1>
+    <p>Groups Phase — Design Prototype</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Map</div>
+    <div class="nav-btn active" onclick="show('map-now', this)"><span class="icon">📍</span> Map – Now Mode</div>
+    <div class="nav-btn" onclick="show('map-soon', this)"><span class="icon">🕐</span> Map – Future Mode</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Groups</div>
+    <div class="nav-btn" onclick="show('groups-discover', this)"><span class="icon">🔍</span> Discover Groups</div>
+    <div class="nav-btn" onclick="show('groups-create', this)"><span class="icon">➕</span> Create Group</div>
+    <div class="nav-btn" onclick="show('group-detail-events', this)"><span class="icon">🎯</span> Group Detail – Events</div>
+    <div class="nav-btn" onclick="show('group-detail-members', this)"><span class="icon">👥</span> Group Detail – Members</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Events</div>
+    <div class="nav-btn" onclick="show('create-event', this)"><span class="icon">📅</span> Create Event</div>
+    <div class="nav-btn" onclick="show('event-detail', this)"><span class="icon">⚡</span> Event Detail</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Social</div>
+    <div class="nav-btn" onclick="show('invite-users', this)"><span class="icon">💌</span> Invite Users</div>
+    <div class="nav-btn" onclick="show('notifications', this)"><span class="icon">🔔</span> Notifications</div>
+  </div>
+</nav>
+
+<!-- ─── PHONE ──────────────────────────── -->
+<div class="stage">
+<div class="phone">
+  <div class="notch"></div>
+  <div class="home-indicator"></div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 1 — MAP NOW MODE
+  ════════════════════════════════════════ -->
+  <div class="screen active" id="map-now">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+
+    <!-- Map background -->
+    <div class="map-bg">
+      <!-- Streets -->
+      <div class="map-street-h" style="top:140px"></div>
+      <div class="map-street-h" style="top:240px"></div>
+      <div class="map-street-h" style="top:360px"></div>
+      <div class="map-street-h" style="top:490px"></div>
+      <div class="map-street-h" style="top:620px"></div>
+      <div class="map-street-v" style="left:70px"></div>
+      <div class="map-street-v" style="left:170px"></div>
+      <div class="map-street-v" style="left:280px"></div>
+      <div class="map-street-v" style="left:360px"></div>
+      <!-- Blocks -->
+      <div class="map-block" style="top:150px;left:80px;width:82px;height:82px"></div>
+      <div class="map-block" style="top:150px;left:180px;width:92px;height:82px"></div>
+      <div class="map-block" style="top:150px;left:290px;width:62px;height:82px"></div>
+      <div class="map-block" style="top:250px;left:80px;width:82px;height:102px"></div>
+      <div class="map-block" style="top:250px;left:180px;width:92px;height:102px"></div>
+      <div class="map-block" style="top:370px;left:80px;width:82px;height:112px"></div>
+      <div class="map-block" style="top:370px;left:180px;width:92px;height:112px"></div>
+      <div class="map-block" style="top:370px;left:290px;width:62px;height:112px"></div>
+      <div class="map-block" style="top:500px;left:80px;width:82px;height:112px"></div>
+      <div class="map-block" style="top:500px;left:290px;width:62px;height:112px"></div>
+      <div class="map-park" style="top:500px;left:180px;width:92px;height:112px;background:#c8e6c9"></div>
+      <!-- Heat blobs (current fun) -->
+      <div class="blob blob-l3" style="width:130px;height:130px;top:300px;left:200px"></div>
+      <div class="fire-emoji" style="top:296px;left:200px">🔥</div>
+      <div class="blob blob-l2" style="width:90px;height:90px;top:180px;left:130px"></div>
+      <div class="blob blob-l1" style="width:60px;height:60px;top:420px;left:310px"></div>
+      <div class="blob blob-l2" style="width:90px;height:90px;top:480px;left:110px"></div>
+      <div class="blob blob-l1" style="width:60px;height:60px;top:200px;left:320px"></div>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="map-mode-pill">
+      <div class="map-mode-opt active" onclick="show('map-now', document.querySelector('.nav-btn'))">Now</div>
+      <div class="map-mode-opt" onclick="show('map-soon', document.querySelectorAll('.nav-btn')[1])">Future</div>
+    </div>
+
+    <!-- Sign out -->
+    <div class="sign-out-btn">Sign out</div>
+
+    <!-- Fun toggle -->
+    <div class="fun-toggle-wrap">
+      <div class="fun-toggle" id="funToggle" onclick="toggleFun()">
+        <div class="fun-dot"></div>
+        <span class="fun-toggle-label">Fun</span>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab-item active"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item" onclick="show('groups-discover', document.querySelectorAll('.nav-btn')[2])"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 2 — MAP SOON MODE
+  ════════════════════════════════════════ -->
+  <div class="screen" id="map-soon">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+
+    <div class="map-bg">
+      <div class="map-street-h" style="top:140px"></div>
+      <div class="map-street-h" style="top:240px"></div>
+      <div class="map-street-h" style="top:360px"></div>
+      <div class="map-street-h" style="top:490px"></div>
+      <div class="map-street-h" style="top:620px"></div>
+      <div class="map-street-v" style="left:70px"></div>
+      <div class="map-street-v" style="left:170px"></div>
+      <div class="map-street-v" style="left:280px"></div>
+      <div class="map-street-v" style="left:360px"></div>
+      <div class="map-block" style="top:150px;left:80px;width:82px;height:82px"></div>
+      <div class="map-block" style="top:150px;left:180px;width:92px;height:82px"></div>
+      <div class="map-block" style="top:150px;left:290px;width:62px;height:82px"></div>
+      <div class="map-block" style="top:250px;left:80px;width:82px;height:102px"></div>
+      <div class="map-block" style="top:250px;left:180px;width:92px;height:102px"></div>
+      <div class="map-block" style="top:370px;left:80px;width:82px;height:112px"></div>
+      <div class="map-block" style="top:370px;left:180px;width:92px;height:112px"></div>
+      <div class="map-block" style="top:370px;left:290px;width:62px;height:112px"></div>
+      <div class="map-block" style="top:500px;left:80px;width:82px;height:112px"></div>
+      <div class="map-block" style="top:500px;left:290px;width:62px;height:112px"></div>
+      <div class="map-park" style="top:500px;left:180px;width:92px;height:112px"></div>
+
+      <!-- Future fun blobs (intensity by attendees) -->
+      <!-- L3: 8 attendees -->
+      <div class="blob blob-l3" style="width:130px;height:130px;top:290px;left:210px;opacity:0.85" id="fut-blob-1"></div>
+      <div class="fire-emoji" style="top:286px;left:210px" id="fut-fire-1">🔥</div>
+      <div class="blob-label" style="top:252px;left:210px" id="fut-time-1">🕕 6pm · 8 going</div>
+      <!-- L2: 4 attendees -->
+      <div class="blob blob-l2" style="width:90px;height:90px;top:170px;left:120px;opacity:0.85" id="fut-blob-2"></div>
+      <div class="blob-label" style="top:135px;left:120px" id="fut-time-2">🕑 2pm · 4 going</div>
+      <!-- L1: 2 attendees -->
+      <div class="blob blob-l1" style="width:65px;height:65px;top:430px;left:320px;opacity:0.85" id="fut-blob-3"></div>
+      <div class="blob-label" style="top:400px;left:320px" id="fut-time-3">🕗 7pm · 2 going</div>
+      <!-- L2: 5 attendees -->
+      <div class="blob blob-l2" style="width:90px;height:90px;top:490px;left:120px;opacity:0.85" id="fut-blob-4"></div>
+      <div class="blob-label" style="top:455px;left:120px" id="fut-time-4">🕛 12pm · 5 going</div>
+    </div>
+
+    <!-- Mode toggle (Future active) -->
+    <div class="map-mode-pill">
+      <div class="map-mode-opt" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])">Now</div>
+      <div class="map-mode-opt active" onclick="show('map-soon', document.querySelectorAll('.nav-btn')[1])">Future</div>
+    </div>
+
+    <!-- Group filter chips -->
+    <div class="group-chips">
+      <div class="chip active" onclick="toggleChip(this)">All Groups</div>
+      <div class="chip" onclick="toggleChip(this)">🥏 Frisbee Crew</div>
+      <div class="chip" onclick="toggleChip(this)">🏖 Beach Volleyball</div>
+      <div class="chip" onclick="toggleChip(this)">🎸 Music Jam</div>
+    </div>
+
+    <!-- Events strip (no Fun toggle) -->
+    <div class="events-strip">
+      <div class="events-strip-scroll">
+        <div class="event-card-mini" onclick="show('event-detail', document.querySelectorAll('.nav-btn')[7])">
+          <div class="ecm-group">🥏 Frisbee Crew</div>
+          <div class="ecm-title">Frisbee at Gordon Beach</div>
+          <div class="ecm-time">Today, 6:00 PM</div>
+          <div class="ecm-att">🔥 8 going</div>
+        </div>
+        <div class="event-card-mini">
+          <div class="ecm-group">🏖 Beach Volleyball</div>
+          <div class="ecm-title">Sunset game</div>
+          <div class="ecm-time">Today, 7:00 PM</div>
+          <div class="ecm-att">💚 5 going</div>
+        </div>
+        <div class="event-card-mini">
+          <div class="ecm-group">🎸 Music Jam</div>
+          <div class="ecm-title">Acoustic session</div>
+          <div class="ecm-time">Sat, 2:00 PM</div>
+          <div class="ecm-att">💚 4 going</div>
+        </div>
+        <div class="event-card-mini">
+          <div class="ecm-group">🏄 Surf Club</div>
+          <div class="ecm-title">Dawn patrol</div>
+          <div class="ecm-time">Sun, 6:30 AM</div>
+          <div class="ecm-att">🌱 2 going</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-item active"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item" onclick="show('groups-discover', document.querySelectorAll('.nav-btn')[2])"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 3 — GROUPS DISCOVER
+  ════════════════════════════════════════ -->
+  <div class="screen" id="groups-discover">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="screen-header padtop">
+      <div class="header-title">Groups</div>
+    </div>
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" placeholder="Search groups…">
+    </div>
+    <div class="scroll-content">
+      <div class="section-label">My Groups</div>
+      <div class="group-card" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">
+        <div class="gc-top">
+          <div>
+            <div class="gc-name">🥏 Frisbee Crew</div>
+          </div>
+          <span class="gc-badge public">Public</span>
+        </div>
+        <div class="gc-desc">Catch some Frisbee action by the shoreline every weekend. All levels welcome!</div>
+        <div class="gc-meta">
+          <span class="gc-meta-item">👥 23 members</span>
+          <div class="stars">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star">★</span>
+          </div>
+          <span class="gc-meta-item">4.2</span>
+        </div>
+      </div>
+      <div class="group-card">
+        <div class="gc-top">
+          <div>
+            <div class="gc-name">🎸 Music Jam</div>
+          </div>
+          <span class="gc-badge private">Private</span>
+        </div>
+        <div class="gc-desc">A small crew of musicians who meet for informal jams. By invite only.</div>
+        <div class="gc-meta">
+          <span class="gc-meta-item">👥 8 members</span>
+          <div class="stars">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span>
+          </div>
+          <span class="gc-meta-item">4.8</span>
+        </div>
+      </div>
+
+      <div class="section-label">Public Groups</div>
+      <div class="group-card">
+        <div class="gc-top">
+          <div>
+            <div class="gc-name">🏖 Beach Volleyball</div>
+          </div>
+          <button class="join-btn" onclick="event.stopPropagation(); this.textContent='✓ Joined'; this.classList.add('joined')">Join</button>
+        </div>
+        <div class="gc-desc">Competitive and casual volleyball on the sand. Spike it!</div>
+        <div class="gc-meta">
+          <span class="gc-meta-item">👥 41 members</span>
+          <div class="stars">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star">★</span>
+          </div>
+          <span class="gc-meta-item">4.0</span>
+        </div>
+      </div>
+      <div class="group-card">
+        <div class="gc-top">
+          <div>
+            <div class="gc-name">🏄 Surf Club</div>
+          </div>
+          <button class="join-btn" onclick="event.stopPropagation(); this.textContent='✓ Joined'; this.classList.add('joined')">Join</button>
+        </div>
+        <div class="gc-desc">Early risers chasing the best waves at sunrise. Coffee after.</div>
+        <div class="gc-meta">
+          <span class="gc-meta-item">👥 17 members</span>
+          <div class="stars">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span>
+          </div>
+          <span class="gc-meta-item">4.7</span>
+        </div>
+      </div>
+      <div class="group-card">
+        <div class="gc-top">
+          <div>
+            <div class="gc-name">🧘 Yoga at Yarkon</div>
+          </div>
+          <button class="join-btn" onclick="event.stopPropagation(); this.textContent='✓ Joined'; this.classList.add('joined')">Join</button>
+        </div>
+        <div class="gc-desc">Morning yoga sessions in the park. Bring a mat and good vibes.</div>
+        <div class="gc-meta">
+          <span class="gc-meta-item">👥 56 members</span>
+          <div class="stars">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star">★</span><span class="star">★</span>
+          </div>
+          <span class="gc-meta-item">3.4</span>
+        </div>
+      </div>
+    </div>
+    <div class="fab" onclick="show('groups-create', document.querySelectorAll('.nav-btn')[3])">+</div>
+    <div class="tab-bar">
+      <div class="tab-item" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item active"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 4 — CREATE GROUP
+  ════════════════════════════════════════ -->
+  <div class="screen" id="groups-create">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="screen-header padtop">
+      <div class="header-back" onclick="show('groups-discover', document.querySelectorAll('.nav-btn')[2])">‹ Back</div>
+      <div class="header-title">New Group</div>
+      <div style="width:44px"></div>
+    </div>
+    <div class="scroll-content" style="padding-bottom:20px">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div class="type-toggle">
+            <div class="type-opt active" id="typePublic" onclick="setGroupType('public')">🌍 Public</div>
+            <div class="type-opt" id="typePrivate" onclick="setGroupType('private')">🔒 Private</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Group Name *</label>
+          <input class="form-input" type="text" placeholder="e.g. Frisbee Crew">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input form-textarea" placeholder="What is this group about?"></textarea>
+        </div>
+        <div id="inviteSection" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Invite People</label>
+            <div class="search-bar" style="margin:0">
+              <span>🔍</span>
+              <input type="text" placeholder="Search by name…">
+            </div>
+            <div style="margin-top:10px">
+              <div class="user-row">
+                <div class="avatar" style="background:#6c63ff">DL</div>
+                <div><div class="member-name">Dana Levy</div><div class="member-role">dana@email.com</div></div>
+                <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+              </div>
+              <div class="user-row">
+                <div class="avatar" style="background:#ff6584">YC</div>
+                <div><div class="member-name">Yoni Cohen</div><div class="member-role">yoni@email.com</div></div>
+                <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 5 — GROUP DETAIL – EVENTS
+  ════════════════════════════════════════ -->
+  <div class="screen" id="group-detail-events">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="group-detail-header">
+      <div style="display:flex;align-items:center;margin-bottom:4px">
+        <div class="header-back" onclick="show('groups-discover', document.querySelectorAll('.nav-btn')[2])">‹ Groups</div>
+      </div>
+      <div class="gdh-name">🥏 Frisbee Crew</div>
+      <div class="gdh-meta">
+        <div class="gdh-rating">
+          <div class="stars" style="font-size:14px">
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star filled">★</span><span class="star filled">★</span>
+            <span class="star">★</span>
+          </div>
+          <div class="gdh-rating-val" style="font-size:13px;margin-left:4px">4.2</div>
+        </div>
+        <div class="gdh-stat">👥 23 members</div>
+        <div class="gdh-stat" style="margin-left:auto">
+          <span class="gc-badge public">Public</span>
+        </div>
+      </div>
+      <div class="gdh-actions">
+        <button class="gdh-btn secondary" onclick="show('invite-users', document.querySelectorAll('.nav-btn')[7])">💌 Invite</button>
+        <button class="gdh-btn secondary" style="flex:0;padding:10px 16px">Leave</button>
+      </div>
+    </div>
+    <div class="inline-tabs">
+      <div class="inline-tab active" id="tab-events" onclick="switchTab('events')">Events</div>
+      <div class="inline-tab" id="tab-members" onclick="switchTab('members')">Members</div>
+    </div>
+    <div class="scroll-content" id="tab-events-content">
+      <div class="section-label">Upcoming</div>
+      <div class="event-item" onclick="show('event-detail', document.querySelectorAll('.nav-btn')[6])">
+        <div class="ei-time-box">
+          <div class="ei-time-day">Fri</div>
+          <div class="ei-time-hour">6</div>
+          <div class="ei-time-ampm">PM</div>
+        </div>
+        <div class="ei-body">
+          <div class="ei-title">Frisbee at Gordon Beach</div>
+          <div class="ei-group">🥏 Frisbee Crew</div>
+          <div class="ei-desc">Bring your best throws! Meeting at the north end.</div>
+          <div class="ei-meta">
+            <span class="ei-meta-item">📍 Gordon Beach</span>
+            <span class="ei-meta-item">👤 Initiated by Gil</span>
+            <span class="ei-meta-item">🔥 8 going</span>
+          </div>
+        </div>
+        <button class="rsvp-btn attending" onclick="event.stopPropagation(); toggleRsvp(this)">✓ Going</button>
+      </div>
+      <div class="event-item">
+        <div class="ei-time-box">
+          <div class="ei-time-day">Sat</div>
+          <div class="ei-time-hour">10</div>
+          <div class="ei-time-ampm">AM</div>
+        </div>
+        <div class="ei-body">
+          <div class="ei-title">Morning Frisbee warm-up</div>
+          <div class="ei-group">🥏 Frisbee Crew</div>
+          <div class="ei-desc">Light warm-up session before the tournament.</div>
+          <div class="ei-meta">
+            <span class="ei-meta-item">📍 Yarkon Park</span>
+            <span class="ei-meta-item">👤 Initiated by Mor</span>
+            <span class="ei-meta-item">💚 5 going</span>
+          </div>
+        </div>
+        <button class="rsvp-btn" onclick="event.stopPropagation(); toggleRsvp(this)">Going?</button>
+      </div>
+      <div class="event-item">
+        <div class="ei-time-box">
+          <div class="ei-time-day">Sun</div>
+          <div class="ei-time-hour">4</div>
+          <div class="ei-time-ampm">PM</div>
+        </div>
+        <div class="ei-body">
+          <div class="ei-title">Sunset Frisbee + BBQ</div>
+          <div class="ei-group">🥏 Frisbee Crew</div>
+          <div class="ei-desc">Bring food to share after the game!</div>
+          <div class="ei-meta">
+            <span class="ei-meta-item">📍 Hilton Beach</span>
+            <span class="ei-meta-item">👤 Initiated by Noa</span>
+            <span class="ei-meta-item">🌱 2 going</span>
+          </div>
+        </div>
+        <button class="rsvp-btn" onclick="event.stopPropagation(); toggleRsvp(this)">Going?</button>
+      </div>
+
+      <!-- Fun Meter -->
+      <div class="fun-meter">
+        <div class="fun-meter-title">⚡ Fun Meter – Rate this group</div>
+        <div class="fun-meter-stars">
+          <span class="fm-star" onclick="rateStar(this, 1)">⭐</span>
+          <span class="fm-star" onclick="rateStar(this, 2)">⭐</span>
+          <span class="fm-star" onclick="rateStar(this, 3)">⭐</span>
+          <span class="fm-star" onclick="rateStar(this, 4)">⭐</span>
+          <span class="fm-star" onclick="rateStar(this, 5)">⭐</span>
+        </div>
+        <div class="fun-meter-avg">Group average: ★ 4.2 (from 14 ratings)</div>
+      </div>
+    </div>
+    <div class="fab" onclick="show('create-event', document.querySelectorAll('.nav-btn')[5])">+</div>
+    <div class="tab-bar">
+      <div class="tab-item" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item active"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 6 — GROUP DETAIL – MEMBERS
+  ════════════════════════════════════════ -->
+  <div class="screen" id="group-detail-members">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="group-detail-header">
+      <div style="display:flex;align-items:center;margin-bottom:4px">
+        <div class="header-back" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">‹ Events</div>
+      </div>
+      <div class="gdh-name">🥏 Frisbee Crew</div>
+      <div class="gdh-meta">
+        <div class="gdh-stat">👥 23 members</div>
+      </div>
+    </div>
+    <div class="inline-tabs">
+      <div class="inline-tab" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">Events</div>
+      <div class="inline-tab active">Members</div>
+    </div>
+    <div class="scroll-content">
+      <div class="member-row">
+        <div class="avatar" style="background:#39FF14;color:#111">GF</div>
+        <div><div class="member-name">Gil Feinstein</div><div class="member-role">Joined Mar 2025</div></div>
+        <span class="role-badge">Admin</span>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#6c63ff">MK</div>
+        <div><div class="member-name">Mor Klein</div><div class="member-role">Joined Jan 2025</div></div>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#ff6584">NL</div>
+        <div><div class="member-name">Noa Levi</div><div class="member-role">Joined Feb 2025</div></div>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#f7b731">AB</div>
+        <div><div class="member-name">Avi Ben-David</div><div class="member-role">Joined Mar 2025</div></div>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#20bf6b">SC</div>
+        <div><div class="member-name">Shira Cohen</div><div class="member-role">Joined Mar 2025</div></div>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#eb3b5a">TZ</div>
+        <div><div class="member-name">Tal Zamir</div><div class="member-role">Joined Mar 2025</div></div>
+      </div>
+      <div class="member-row">
+        <div class="avatar" style="background:#4b7bec">DR</div>
+        <div><div class="member-name">Dan Rosen</div><div class="member-role">Joined Apr 2025</div></div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item active"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 7 — CREATE EVENT
+  ════════════════════════════════════════ -->
+  <div class="screen" id="create-event">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="screen-header padtop">
+      <div class="header-back" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">‹ Back</div>
+      <div class="header-title">Schedule Fun</div>
+      <div style="width:44px"></div>
+    </div>
+    <div class="scroll-content" style="padding-bottom:20px">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Group</label>
+          <input class="form-input" type="text" value="🥏 Frisbee Crew" readonly style="color:#888">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event Title *</label>
+          <input class="form-input" type="text" placeholder="e.g. Frisbee at Gordon Beach">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input form-textarea" placeholder="What's the plan?"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date & Time *</label>
+          <input class="form-input" type="datetime-local" value="2026-03-28T18:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location *</label>
+          <div class="location-picker">
+            <!-- Mini map with pin -->
+            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:#ede9de">
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);font-size:36px">📍</div>
+              <div class="location-picker-label">Gordon Beach, Tel Aviv</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:6px">Tap to change location</div>
+        </div>
+        <button class="submit-btn" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">Schedule Event 🎉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 8 — EVENT DETAIL
+  ════════════════════════════════════════ -->
+  <div class="screen" id="event-detail">
+    <div class="status-bar light"><span>9:41</span><span>●●●</span></div>
+    <div class="event-detail-map">
+      <!-- Mini map -->
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:#ede9de">
+        <div class="map-street-h" style="top:60px"></div>
+        <div class="map-street-h" style="top:120px"></div>
+        <div class="map-street-v" style="left:80px"></div>
+        <div class="map-street-v" style="left:200px"></div>
+        <div class="map-block" style="top:0;left:0;width:72px;height:55px"></div>
+        <div class="map-block" style="top:0;left:90px;width:102px;height:55px"></div>
+        <div class="map-block" style="top:70px;left:0;width:72px;height:44px"></div>
+        <div class="map-park" style="top:70px;left:90px;width:102px;height:44px"></div>
+        <!-- Event blob -->
+        <div class="blob blob-l3" style="width:90px;height:90px;top:100px;left:180px"></div>
+        <div class="fire-emoji" style="top:96px;left:180px">🔥</div>
+        <div class="blob-label" style="top:60px;left:180px">6:00 PM</div>
+      </div>
+      <!-- Back button -->
+      <div style="position:absolute;top:50px;left:14px;background:white;border-radius:18px;padding:6px 13px;font-size:14px;color:#007aff;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">‹ Back</div>
+    </div>
+    <div class="scroll-content" style="padding-bottom:20px">
+      <div class="event-detail-info">
+        <div class="edi-title">Frisbee at Gordon Beach</div>
+        <div class="edi-group">🥏 Frisbee Crew</div>
+
+        <div class="edi-row">
+          <div class="edi-row-icon">🕕</div>
+          <div>
+            <div class="edi-row-text">Friday, March 28 · 6:00 PM</div>
+            <div class="edi-row-sub">In 2 days</div>
+          </div>
+        </div>
+        <div class="edi-row">
+          <div class="edi-row-icon">📍</div>
+          <div>
+            <div class="edi-row-text">Gordon Beach</div>
+            <div class="edi-row-sub">Tel Aviv – Yafo</div>
+          </div>
+        </div>
+        <div class="edi-row">
+          <div class="edi-row-icon">👤</div>
+          <div>
+            <div class="edi-row-text">Organised by Gil Feinstein</div>
+          </div>
+        </div>
+        <div class="edi-row" style="border:none">
+          <div class="edi-row-icon">🔥</div>
+          <div>
+            <div class="edi-row-text">8 people going</div>
+            <div style="display:flex;gap:-6px;margin-top:5px">
+              <div class="avatar" style="background:#39FF14;color:#111;width:30px;height:30px;font-size:11px;border:2px solid white;margin-left:-4px">GF</div>
+              <div class="avatar" style="background:#6c63ff;width:30px;height:30px;font-size:11px;border:2px solid white;margin-left:-4px">MK</div>
+              <div class="avatar" style="background:#ff6584;width:30px;height:30px;font-size:11px;border:2px solid white;margin-left:-4px">NL</div>
+              <div class="avatar" style="background:#f7b731;width:30px;height:30px;font-size:11px;border:2px solid white;margin-left:-4px">AB</div>
+              <div class="avatar" style="background:#20bf6b;width:30px;height:30px;font-size:11px;border:2px solid white;margin-left:-4px">+4</div>
+            </div>
+          </div>
+        </div>
+        <button class="rsvp-big-btn attending" id="mainRsvpBtn" onclick="toggleMainRsvp()">✓ I'm Going!</button>
+        <div style="font-size:13px;color:#888;margin-top:10px;text-align:center">
+          Bring your best throws! Meeting at the north end.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 9 — INVITE USERS
+  ════════════════════════════════════════ -->
+  <div class="screen" id="invite-users">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="screen-header padtop">
+      <div class="header-back" onclick="show('group-detail-events', document.querySelectorAll('.nav-btn')[4])">‹ Back</div>
+      <div class="header-title">Invite to Group</div>
+      <div style="width:44px"></div>
+    </div>
+    <div style="padding:8px 14px 0;font-size:13px;color:#888">
+      Invite people to <strong style="color:#111">🥏 Frisbee Crew</strong>
+    </div>
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" placeholder="Search by name…" oninput="filterUsers(this.value)">
+    </div>
+    <div class="scroll-content" id="userList">
+      <div class="user-row">
+        <div class="avatar" style="background:#6c63ff">DL</div>
+        <div><div class="member-name">Dana Levy</div><div class="member-role">3 mutual groups</div></div>
+        <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+      </div>
+      <div class="user-row">
+        <div class="avatar" style="background:#ff6584">YC</div>
+        <div><div class="member-name">Yoni Cohen</div><div class="member-role">1 mutual group</div></div>
+        <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+      </div>
+      <div class="user-row">
+        <div class="avatar" style="background:#20bf6b">RM</div>
+        <div><div class="member-name">Rina Marcus</div><div class="member-role">2 mutual groups</div></div>
+        <button class="invite-btn sent">✓ Invited</button>
+      </div>
+      <div class="user-row">
+        <div class="avatar" style="background:#f7b731">EK</div>
+        <div><div class="member-name">Eitan Katz</div><div class="member-role">No mutual groups</div></div>
+        <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+      </div>
+      <div class="user-row">
+        <div class="avatar" style="background:#eb3b5a">LS</div>
+        <div><div class="member-name">Liat Shapiro</div><div class="member-role">5 mutual groups</div></div>
+        <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+      </div>
+      <div class="user-row">
+        <div class="avatar" style="background:#4b7bec">OB</div>
+        <div><div class="member-name">Or Ben-Nun</div><div class="member-role">1 mutual group</div></div>
+        <button class="invite-btn" onclick="this.textContent='✓ Invited';this.classList.add('sent')">Invite</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item active"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item" onclick="show('notifications', document.querySelectorAll('.nav-btn')[8])"><div class="t-icon">🔔</div><div class="t-label">Alerts</div><div class="tab-badge">3</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 10 — NOTIFICATIONS
+  ════════════════════════════════════════ -->
+  <div class="screen" id="notifications">
+    <div class="status-bar dark"><span>9:41</span><span>●●●</span></div>
+    <div class="screen-header padtop" style="justify-content:space-between">
+      <div class="header-title" style="text-align:left">Notifications</div>
+      <div class="header-action" onclick="markAllRead()">Mark all read</div>
+    </div>
+    <div class="scroll-content">
+      <div class="notif-row unread" id="notif1">
+        <div class="notif-icon" style="background:#fff3e0">🎉</div>
+        <div class="notif-body">
+          <div class="notif-title">New event in Frisbee Crew</div>
+          <div class="notif-text">Gil scheduled "Frisbee at Gordon Beach" for Friday at 6pm</div>
+          <div class="notif-time">2 hours ago</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-row unread" id="notif2">
+        <div class="notif-icon" style="background:#e8f5e9">💌</div>
+        <div class="notif-body">
+          <div class="notif-title">Group invite from Mor Klein</div>
+          <div class="notif-text">You're invited to join <strong>🎸 Music Jam</strong></div>
+          <div class="notif-actions">
+            <button class="notif-accept" onclick="respondInvite(this, 'accept')">Accept</button>
+            <button class="notif-decline" onclick="respondInvite(this, 'decline')">Decline</button>
+          </div>
+          <div class="notif-time">Yesterday</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-row unread" id="notif3">
+        <div class="notif-icon" style="background:#fce4ec">🎉</div>
+        <div class="notif-body">
+          <div class="notif-title">New event in Beach Volleyball</div>
+          <div class="notif-text">Noa scheduled "Sunset game" for Today at 7pm</div>
+          <div class="notif-time">3 hours ago</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#f3e5f5">✅</div>
+        <div class="notif-body">
+          <div class="notif-title">Avi accepted your invite</div>
+          <div class="notif-text">Avi Ben-David joined <strong>🥏 Frisbee Crew</strong></div>
+          <div class="notif-time">2 days ago</div>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#fff3e0">🎉</div>
+        <div class="notif-body">
+          <div class="notif-title">New event in Frisbee Crew</div>
+          <div class="notif-text">Mor scheduled "Morning Frisbee warm-up" for Saturday</div>
+          <div class="notif-time">3 days ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item" onclick="show('map-now', document.querySelectorAll('.nav-btn')[0])"><div class="t-icon">🗺</div><div class="t-label">Map</div></div>
+      <div class="tab-item" onclick="show('groups-discover', document.querySelectorAll('.nav-btn')[2])"><div class="t-icon">👥</div><div class="t-label">Groups</div></div>
+      <div class="tab-item active"><div class="t-icon">🔔</div><div class="t-label">Alerts</div></div>
+    </div>
+  </div>
+
+</div><!-- phone -->
+</div><!-- stage -->
+
+<script>
+function show(screenId, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+}
+
+function toggleFun() {
+  const t = document.getElementById('funToggle');
+  t.classList.toggle('on');
+}
+
+function toggleChip(el) {
+  const chips = document.querySelectorAll('#map-soon .chip');
+  if (el.textContent === 'All Groups') {
+    chips.forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    chips[0].classList.remove('active');
+    el.classList.toggle('active');
+    const anyActive = [...chips].slice(1).some(c => c.classList.contains('active'));
+    if (!anyActive) chips[0].classList.add('active');
+  }
+}
+
+function setGroupType(type) {
+  const pub = document.getElementById('typePublic');
+  const priv = document.getElementById('typePrivate');
+  const inviteSection = document.getElementById('inviteSection');
+  if (type === 'public') {
+    pub.classList.add('active'); priv.classList.remove('active');
+    inviteSection.style.display = 'none';
+  } else {
+    priv.classList.add('active'); pub.classList.remove('active');
+    inviteSection.style.display = '';
+  }
+}
+
+function switchTab(tab) {
+  if (tab === 'members') {
+    show('group-detail-members', document.querySelectorAll('.nav-btn')[5]);
+  }
+}
+
+function toggleRsvp(btn) {
+  if (btn.classList.contains('attending')) {
+    btn.classList.remove('attending');
+    btn.textContent = 'Going?';
+  } else {
+    btn.classList.add('attending');
+    btn.textContent = '✓ Going';
+  }
+}
+
+function toggleMainRsvp() {
+  const btn = document.getElementById('mainRsvpBtn');
+  if (btn.classList.contains('attending')) {
+    btn.classList.remove('attending');
+    btn.textContent = "I'm Going!";
+  } else {
+    btn.classList.add('attending');
+    btn.textContent = "✓ I'm Going!";
+  }
+}
+
+function rateStar(el, val) {
+  const stars = el.parentElement.querySelectorAll('.fm-star');
+  stars.forEach((s, i) => {
+    s.classList.toggle('filled', i < val);
+  });
+  el.parentElement.nextElementSibling.textContent = `Your rating: ${val} ★ · Group average: ★ 4.2`;
+}
+
+function respondInvite(btn, action) {
+  const row = btn.closest('.notif-row');
+  const actions = btn.closest('.notif-actions');
+  if (action === 'accept') {
+    actions.innerHTML = '<span style="color:#1a8800;font-size:12px;font-weight:700">✓ Joined Music Jam!</span>';
+  } else {
+    actions.innerHTML = '<span style="color:#888;font-size:12px">Declined</span>';
+  }
+  row.classList.remove('unread');
+  const dot = row.querySelector('.notif-dot');
+  if (dot) dot.style.display = 'none';
+}
+
+function markAllRead() {
+  document.querySelectorAll('.notif-row.unread').forEach(r => {
+    r.classList.remove('unread');
+    const dot = r.querySelector('.notif-dot');
+    if (dot) dot.style.display = 'none';
+  });
+  document.querySelectorAll('.tab-badge').forEach(b => b.style.display = 'none');
+}
+</script>
+</body>
+</html>
