@@ -68,13 +68,15 @@ function EventCard({
   event,
   going,
   onToggleRsvp,
+  onPress,
 }: {
   event: Event;
   going: boolean;
   onToggleRsvp: () => void;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.eventCard}>
+    <Pressable style={styles.eventCard} onPress={onPress}>
       <View style={styles.eventTimeBox}>
         <Text style={styles.eventDay}>{formatDate(event.starts_at)}</Text>
         <Text style={styles.eventTime}>{formatTime(event.starts_at)}</Text>
@@ -105,7 +107,7 @@ function EventCard({
           </View>
           <Pressable
             style={[styles.rsvpBtn, going && styles.rsvpBtnGoing]}
-            onPress={onToggleRsvp}
+            onPress={(e) => { e.stopPropagation(); onToggleRsvp(); }}
           >
             <Text style={[styles.rsvpBtnText, going && styles.rsvpBtnTextGoing]}>
               {going ? '✓ Going' : 'Going?'}
@@ -113,7 +115,7 @@ function EventCard({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -239,9 +241,20 @@ export default function GroupDetailScreen() {
           {/* Actions */}
           <View style={styles.actionRow}>
             {isMember ? (
-              <Pressable style={styles.leaveBtn} onPress={handleLeave}>
-                <Text style={styles.leaveBtnText}>Leave</Text>
-              </Pressable>
+              <>
+                {myRole === 'admin' && (
+                  <Pressable
+                    style={styles.inviteBtn}
+                    onPress={() => router.push(`/group/invite?groupId=${id}`)}
+                  >
+                    <Ionicons name="person-add-outline" size={16} color={Colors.funGreenDark} />
+                    <Text style={styles.inviteBtnText}>Invite</Text>
+                  </Pressable>
+                )}
+                <Pressable style={styles.leaveBtn} onPress={handleLeave}>
+                  <Text style={styles.leaveBtnText}>Leave</Text>
+                </Pressable>
+              </>
             ) : (
               <Pressable style={styles.joinBtn} onPress={joinGroup}>
                 <Text style={styles.joinBtnText}>Join</Text>
@@ -293,6 +306,7 @@ export default function GroupDetailScreen() {
                 event={event}
                 going={myRsvpIds.has(event.id)}
                 onToggleRsvp={() => toggleRsvp(event.id)}
+                onPress={() => router.push(`/event/${event.id}`)}
               />
             ))
           )
@@ -309,13 +323,7 @@ export default function GroupDetailScreen() {
       {isMember && (
         <Pressable
           style={styles.fab}
-          onPress={() =>
-            Alert.alert(
-              'Create Event',
-              'Create Event screen is coming in the next release.',
-              [{ text: 'OK' }]
-            )
-          }
+          onPress={() => router.push(`/event/create?groupId=${id}`)}
         >
           <Ionicons name="add" size={28} color="#FFFFFF" />
         </Pressable>
@@ -429,6 +437,20 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.funGreen + '22',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  inviteBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.funGreenDark,
   },
   joinBtn: {
     flex: 1,

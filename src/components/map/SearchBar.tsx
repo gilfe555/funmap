@@ -13,23 +13,24 @@ const GOOGLE_MAPS_API_KEY =
   '';
 
 interface SearchBarProps {
-  onPlaceSelected: (lat: number, lng: number) => void;
+  onPlaceSelected: (lat: number, lng: number, name?: string) => void;
   wrapperStyle?: ViewStyle;
+  placeholder?: string;
 }
 
-export function SearchBar({ onPlaceSelected, wrapperStyle }: SearchBarProps) {
+export function SearchBar({ onPlaceSelected, wrapperStyle, placeholder = 'Search places' }: SearchBarProps) {
   const ref = useRef<GooglePlacesAutocompleteRef>(null);
 
   return (
     <View style={[styles.wrapper, wrapperStyle]}>
       <GooglePlacesAutocomplete
         ref={ref}
-        placeholder="Search places"
+        placeholder={placeholder}
         fetchDetails
         onPress={(_data, details: GooglePlaceDetail | null) => {
           if (!details) return;
           const { lat, lng } = details.geometry.location;
-          onPlaceSelected(lat, lng);
+          onPlaceSelected(lat, lng, _data.description);
           ref.current?.clear();
         }}
         query={{
