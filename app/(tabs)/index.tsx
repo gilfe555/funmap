@@ -5,7 +5,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Pressable,
+  Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import MapView, { Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
 import Constants from 'expo-constants';
 
@@ -41,6 +45,7 @@ const LIGHT_MAP_STYLE = [
 ];
 
 export default function MapScreen() {
+  const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -162,9 +167,20 @@ export default function MapScreen() {
         <Heatmap clusters={clusters} />
       </MapView>
 
-      {/* Search bar (top, inside safe area) */}
+      {/* Search bar + gear icon (top, inside safe area) */}
       <SafeAreaView style={styles.searchContainer} edges={['top']}>
-        <SearchBar onPlaceSelected={handlePlaceSelected} />
+        <View style={styles.searchRow}>
+          <SearchBar
+            onPlaceSelected={handlePlaceSelected}
+            wrapperStyle={styles.searchBarWrapper}
+          />
+          <Pressable
+            style={styles.gearButton}
+            onPress={() => router.push('/(tabs)/settings')}
+          >
+            <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} />
+          </Pressable>
+        </View>
       </SafeAreaView>
 
       {/* Empty state */}
@@ -224,6 +240,33 @@ const styles = StyleSheet.create({
     right: 0,
     paddingTop: 4,
     zIndex: 10,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 16,
+  },
+  searchBarWrapper: {
+    flex: 1,
+    marginRight: 0,
+  },
+  gearButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    ...Platform.select({
+      android: { elevation: 4 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+    }),
   },
   emptyBanner: {
     position: 'absolute',

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { StyleSheet, Platform, View, ViewStyle } from 'react-native';
 import {
   GooglePlacesAutocomplete,
   GooglePlacesAutocompleteRef,
@@ -14,13 +14,14 @@ const GOOGLE_MAPS_API_KEY =
 
 interface SearchBarProps {
   onPlaceSelected: (lat: number, lng: number) => void;
+  wrapperStyle?: ViewStyle;
 }
 
-export function SearchBar({ onPlaceSelected }: SearchBarProps) {
+export function SearchBar({ onPlaceSelected, wrapperStyle }: SearchBarProps) {
   const ref = useRef<GooglePlacesAutocompleteRef>(null);
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, wrapperStyle]}>
       <GooglePlacesAutocomplete
         ref={ref}
         placeholder="Search places"

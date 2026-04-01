@@ -25,15 +25,28 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="groups"
         options={{
-          title: 'Settings',
+          title: 'Groups',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+            <Ionicons name="people" size={size} color={color} />
           ),
         }}
       />
-      {/* Groups tab reserved for next iteration */}
+      <Tabs.Screen
+        name="alerts"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Settings is not a tab — accessed via gear icon on Map/Groups screens */}
+      <Tabs.Screen
+        name="settings"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }
