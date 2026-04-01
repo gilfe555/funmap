@@ -21,10 +21,16 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { useHeatmap } from '@/hooks/useHeatmap';
 import { useFunSignal } from '@/hooks/useFunSignal';
+import { useGroups } from '@/hooks/useGroups';
+import { useFutureEvents } from '@/hooks/useFutureEvents';
 import { Heatmap } from '@/components/map/Heatmap';
+import { FutureHeatmap } from '@/components/map/FutureHeatmap';
 import { FunToggle } from '@/components/map/FunToggle';
 import { SearchBar } from '@/components/map/SearchBar';
 import { LocationButton } from '@/components/map/LocationButton';
+import { NowFutureToggle, MapMode } from '@/components/map/NowFutureToggle';
+import { GroupFilterChips } from '@/components/map/GroupFilterChips';
+import { EventsStrip } from '@/components/map/EventsStrip';
 import { MapBounds } from '@/types';
 import { Colors } from '@/constants/colors';
 import { DEFAULT_REGION } from '@/constants/config';
@@ -50,8 +56,16 @@ export default function MapScreen() {
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<'loading' | 'granted' | 'denied'>('loading');
+  const [mapMode, setMapMode] = useState<MapMode>('now');
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
   const { clusters } = useHeatmap(bounds);
   const { isOn, isLoading, toggleFun } = useFunSignal();
+  const { myGroups } = useGroups();
+  const { eventClusters, upcomingEvents } = useFutureEvents(
+    mapMode === 'future' ? bounds : null,
+    selectedGroupId
+  );
 
   useEffect(() => {
     requestLocationPermission();
@@ -147,7 +161,8 @@ export default function MapScreen() {
     ? { ...userLocation, latitudeDelta: 0.03, longitudeDelta: 0.03 }
     : DEFAULT_REGION;
 
-  const isEmpty = clusters.length === 0;
+  const isFuture = mapMode === 'future';
+  const isNowEmpty = !isFuture && clusters.length === 0;
 
   return (
     <View style={styles.container}>
@@ -164,11 +179,16 @@ export default function MapScreen() {
         onRegionChangeComplete={handleRegionChange}
         onMapReady={() => handleRegionChange(initialRegion)}
       >
-        <Heatmap clusters={clusters} />
+        {isFuture ? (
+          <FutureHeatmap clusters={eventClusters} />
+        ) : (
+          <Heatmap clusters={clusters} />
+        )}
       </MapView>
 
-      {/* Search bar + gear icon (top, inside safe area) */}
-      <SafeAreaView style={styles.searchContainer} edges={['top']}>
+      {/* Top overlay: search + gear + Now/Future toggle + filter chips */}
+      <SafeAreaView style={styles.topOverlay} edges={['top']}>
+        {/* Search row */}
         <View style={styles.searchRow}>
           <SearchBar
             onPlaceSelected={handlePlaceSelected}
@@ -181,21 +201,43 @@ export default function MapScreen() {
             <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} />
           </Pressable>
         </View>
+
+        {/* Now / Future toggle */}
+        <View style={styles.modeToggleRow}>
+          <NowFutureToggle value={mapMode} onChange={setMapMode} />
+        </View>
+
+        {/* Group filter chips (Future mode only) */}
+        {isFuture && (
+          <View style={styles.chipsRow}>
+            <GroupFilterChips
+              groups={myGroups}
+              selectedId={selectedGroupId}
+              onSelect={setSelectedGroupId}
+            />
+          </View>
+        )}
       </SafeAreaView>
 
-      {/* Empty state */}
-      {isEmpty && (
+      {/* Empty state (Now mode only) */}
+      {isNowEmpty && (
         <View style={styles.emptyBanner} pointerEvents="none">
           <Text style={styles.emptyText}>Be the first, lead the fun</Text>
         </View>
       )}
 
-      {/* Fun toggle (bottom center) */}
-      <SafeAreaView style={styles.toggleContainer} edges={['bottom']}>
-        <FunToggle isOn={isOn} isLoading={isLoading} onPress={handleToggle} />
-      </SafeAreaView>
+      {/* Bottom: Fun toggle (Now mode) OR Events strip (Future mode) */}
+      {isFuture ? (
+        <SafeAreaView style={styles.eventsStripContainer} edges={['bottom']}>
+          <EventsStrip events={upcomingEvents} />
+        </SafeAreaView>
+      ) : (
+        <SafeAreaView style={styles.toggleContainer} edges={['bottom']}>
+          <FunToggle isOn={isOn} isLoading={isLoading} onPress={handleToggle} />
+        </SafeAreaView>
+      )}
 
-      {/* Location button (bottom right, above toggle) */}
+      {/* Location button */}
       <View style={styles.locationButtonContainer}>
         <LocationButton onPress={handleCenterOnUser} />
       </View>
@@ -233,17 +275,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  searchContainer: {
+  topOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 4,
     zIndex: 10,
   },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingTop: 4,
     paddingRight: 16,
   },
   searchBarWrapper: {
@@ -268,9 +310,16 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  modeToggleRow: {
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  chipsRow: {
+    paddingTop: 8,
+  },
   emptyBanner: {
     position: 'absolute',
-    top: 140,
+    top: 170,
     alignSelf: 'center',
   },
   emptyText: {
@@ -286,9 +335,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 4,
   },
+  eventsStripContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border,
+  },
   locationButtonContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 80,
+    bottom: 110,
   },
 });

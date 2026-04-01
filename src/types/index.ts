@@ -58,6 +58,27 @@ export interface GroupRating {
   created_at: string;
 }
 
+export interface EventCluster {
+  lat: number;
+  lng: number;
+  level: HeatLevel;
+  rsvp_count: number;
+  next_event: Event;
+}
+
+export type NotificationType = 'new_event' | 'rsvp' | 'invite';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  reference_id: string | null;
+  read: boolean;
+  created_at: string;
+}
+
 export interface FunSignal {
   user_id: string;
   latitude: number;

@@ -100,6 +100,17 @@ export default function InviteUsersScreen() {
     await supabase
       .from('group_members')
       .insert({ group_id: groupId, user_id: userId, role: 'member' });
+
+    // Notify the invited user
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type: 'invite',
+        title: `You were invited to ${groupName || 'a group'}`,
+        body: 'Tap to view the group.',
+        reference_id: groupId,
+      });
   }
 
   function renderUser({ item }: { item: UserResult }) {
