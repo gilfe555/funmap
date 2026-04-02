@@ -28,12 +28,24 @@ This guide walks through creating the Supabase project and applying the database
 
 ## 3. Apply the Database Schema
 
-1. In your Supabase dashboard, click **SQL Editor** in the left sidebar
-2. Click **New query**
-3. Paste the entire contents of `supabase/migrations/001_fun_signals.sql`
-4. Click **Run** (or press Ctrl+Enter)
-5. You should see "Success. No rows returned."
-6. Verify: go to **Table Editor** → you should see the `fun_signals` table
+Run all four migration files **in order** via SQL Editor (left sidebar → New query → paste → Run):
+
+| # | File | What it creates |
+|---|------|----------------|
+| 1 | `supabase/migrations/001_fun_signals.sql` | `fun_signals` table, RLS, indexes |
+| 2 | `supabase/migrations/002_groups.sql` | `profiles`, `groups`, `group_members`, `events`, `event_rsvps`, `group_ratings`, all triggers and RLS |
+| 3 | `supabase/migrations/003_invite_policy.sql` | Adds admin-invite RLS policy to `group_members` |
+| 4 | `supabase/migrations/004_notifications.sql` | `notifications` table, new-event + RSVP trigger functions, RLS |
+
+Each should return "Success. No rows returned." Verify in **Table Editor** — you should see all tables listed.
+
+> **Existing users:** After running migration 002, backfill profile rows for any accounts created before the migration:
+> ```sql
+> INSERT INTO public.profiles (id, display_name)
+> SELECT id, split_part(email, '@', 1)
+> FROM auth.users
+> ON CONFLICT (id) DO NOTHING;
+> ```
 
 ## 4. Enable Realtime
 

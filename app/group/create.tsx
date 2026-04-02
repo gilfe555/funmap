@@ -42,7 +42,7 @@ export default function CreateGroupScreen() {
     setIsSubmitting(false);
 
     if (error || !group) {
-      Alert.alert('Error', 'Could not create group. Please try again.');
+      Alert.alert('Error', `Could not create group.\n\n${error?.message ?? 'Unknown error'}`);
       return;
     }
 

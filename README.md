@@ -57,15 +57,17 @@ Then:
 funmap/
 ├── app/                  # Screens (Expo Router)
 │   ├── (auth)/           # Login & Sign Up
-│   └── (tabs)/           # Main app tabs (Map, future: Groups, Stats)
+│   ├── (tabs)/           # Tab screens: Map, Groups, Alerts, Settings
+│   ├── group/            # Group detail, create, invite
+│   └── event/            # Event detail, create
 ├── src/
-│   ├── components/       # UI components
-│   ├── hooks/            # React hooks (auth, fun signal, heatmap)
+│   ├── components/       # UI components (map, groups, notifications)
+│   ├── hooks/            # React hooks (heatmap, groups, events, notifications)
 │   ├── lib/              # Supabase client
 │   ├── types/            # TypeScript types
 │   ├── utils/            # Clustering algorithm
 │   └── constants/        # Colors, config values
-├── supabase/migrations/  # SQL schema files
+├── supabase/migrations/  # SQL schema files (001–004)
 ├── scripts/              # Dev utilities (seed data)
 └── docs/                 # Setup and architecture guides
 ```
